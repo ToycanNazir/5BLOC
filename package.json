@@ -1,0 +1,21 @@
+{
+  "name": "trading-cards-nft",
+  "version": "1.0.0",
+  "description": "DApp de trading cards NFT sur Ethereum",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "keywords": ["blockchain", "ethereum", "nft", "web3", "dapp"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@openzeppelin/contracts": "^5.4.0",
+    "hardhat": "^3.1.4"
+  }
+}
