@@ -1,0 +1,116 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  color: #fff;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Sections */
+section {
+  background: #ffffff10;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+section h2 {
+  margin-bottom: 20px;
+  color: #f39c12;
+  font-size: 1.4rem;
+}
+
+/* Form */
+form {
+  display: grid;
+  gap: 15px;
+  max-width: 500px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ffffff20;
+  background: #ffffff10;
+  color: white;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #f39c12;
+}
+
+form button[type="submit"] {
+  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+form button[type="submit"]:hover {
+  transform: translateY(-2px);
+}
+
+/* Search */
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ffffff20;
+  background: #ffffff10;
+  color: white;
+  font-size: 1rem;
+}
+
+.search-box button {
+  background: #3498db;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-box {
+    flex-direction: column;
+  }
+}
