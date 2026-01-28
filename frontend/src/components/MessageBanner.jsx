@@ -11,3 +11,4 @@ export default function MessageBanner() {
       {message.text}
     </div>
   );
+}
