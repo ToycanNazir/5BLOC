@@ -35,6 +35,8 @@ contract TradingCards is ERC721, Ownable {
     // ============ CONSTANTES ============
 
     uint256 public constant MAX_CARTES_PAR_UTILISATEUR = 4;
+    uint256 public constant COOLDOWN_DUREE = 5 minutes;
+    uint256 public constant LOCK_DUREE = 10 minutes;
 
     // ============ VARIABLES D'ETAT ============
 
@@ -45,6 +47,9 @@ contract TradingCards is ERC721, Ownable {
 
     // adresse => nombre de cartes possedees
     mapping(address => uint256) private _nombreCartes;
+
+    // adresse => timestamp de la derniere transaction
+    mapping(address => uint256) private _dernierTransaction;
 
     // ============ EVENTS ============
 
@@ -202,6 +207,40 @@ contract TradingCards is ERC721, Ownable {
         return _prochainTokenId;
     }
 
+    /**
+     * @dev Recuperer le temps restant du cooldown d'un utilisateur (en secondes)
+     * @param utilisateur Adresse de l'utilisateur
+     */
+    function getCooldownRestant(address utilisateur) external view returns (uint256) {
+        uint256 finCooldown = _dernierTransaction[utilisateur] + COOLDOWN_DUREE;
+        if (block.timestamp >= finCooldown) {
+            return 0;
+        }
+        return finCooldown - block.timestamp;
+    }
+
+    /**
+     * @dev Recuperer le temps restant du lock d'une carte (en secondes)
+     * @param tokenId ID de la carte
+     */
+    function getLockRestant(uint256 tokenId) external view returns (uint256) {
+        require(_existeCarte(tokenId), "Carte inexistante");
+        uint256 finLock = _cartes[tokenId].dernierTransfertA + LOCK_DUREE;
+        if (block.timestamp >= finLock) {
+            return 0;
+        }
+        return finLock - block.timestamp;
+    }
+
+    /**
+     * @dev Verifier si une carte est actuellement verrouillee
+     * @param tokenId ID de la carte
+     */
+    function estVerrouillee(uint256 tokenId) external view returns (bool) {
+        require(_existeCarte(tokenId), "Carte inexistante");
+        return block.timestamp < _cartes[tokenId].dernierTransfertA + LOCK_DUREE;
+    }
+
     // ============ FONCTIONS INTERNES ============
 
     /**
@@ -227,11 +266,26 @@ contract TradingCards is ERC721, Ownable {
 
         // Mise a jour des compteurs et metadonnees si c'est un transfert (pas un mint/burn)
         if (from != address(0) && to != address(0)) {
+            // Verifier le cooldown de l'expediteur (5 min entre deux transactions)
+            require(
+                block.timestamp >= _dernierTransaction[from] + COOLDOWN_DUREE,
+                "Cooldown actif: attendez 5 minutes entre deux transactions"
+            );
+
+            // Verifier le lock temporaire de la carte (10 min apres acquisition)
+            require(
+                block.timestamp >= _cartes[tokenId].dernierTransfertA + LOCK_DUREE,
+                "Carte verrouillee: attendez 10 minutes apres acquisition"
+            );
+
             // Verifier la limite du destinataire
             require(
                 _nombreCartes[to] < MAX_CARTES_PAR_UTILISATEUR,
                 "Destinataire a atteint la limite de 4 cartes"
             );
+
+            // Mettre a jour le cooldown de l'expediteur
+            _dernierTransaction[from] = block.timestamp;
 
             // Mettre a jour les compteurs
             _nombreCartes[from]--;
