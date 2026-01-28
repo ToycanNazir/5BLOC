@@ -1,103 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trading Cards NFT</title>
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
-<body>
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <h1>Trading Cards NFT</h1>
-            <div id="wallet-section">
-                <button id="connect-btn">Connecter MetaMask</button>
-                <div id="wallet-info" class="hidden">
-                    <span id="wallet-address"></span>
-                    <span id="card-count"></span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Message d'erreur/succes -->
-        <div id="message" class="hidden"></div>
-
-        <!-- Section principale -->
-        <main>
-            <!-- Mes cartes -->
-            <section id="my-cards-section">
-                <h2>Mes Cartes</h2>
-                <div id="my-cards" class="cards-grid">
-                    <p class="placeholder">Connectez votre wallet pour voir vos cartes</p>
-                </div>
-            </section>
-
-            <!-- Creer une carte (admin seulement) -->
-            <section id="create-card-section" class="hidden">
-                <h2>Creer une Carte (Admin)</h2>
-                <form id="create-card-form">
-                    <div class="form-group">
-                        <label for="destinataire">Adresse du destinataire</label>
-                        <input type="text" id="destinataire" placeholder="0x..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nom">Nom de la carte</label>
-                        <input type="text" id="nom" placeholder="Dragon de Feu" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="rarete">Rarete</label>
-                        <select id="rarete" required>
-                            <option value="0">Commune</option>
-                            <option value="1">Rare</option>
-                            <option value="2">Epique</option>
-                            <option value="3">Legendaire</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="valeur">Valeur (points)</label>
-                        <input type="number" id="valeur" placeholder="100" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="ipfsHash">Hash IPFS</label>
-                        <input type="text" id="ipfsHash" placeholder="QmXxx..." required>
-                    </div>
-                    <button type="submit">Creer la Carte</button>
-                </form>
-            </section>
-
-            <!-- Rechercher une carte -->
-            <section id="search-card-section">
-                <h2>Rechercher une Carte</h2>
-                <div class="search-box">
-                    <input type="number" id="search-token-id" placeholder="ID de la carte">
-                    <button id="search-btn">Rechercher</button>
-                </div>
-                <div id="card-details" class="hidden">
-                    <div class="card-detail-view">
-                        <h3 id="detail-nom"></h3>
-                        <p><strong>Rarete:</strong> <span id="detail-rarete"></span></p>
-                        <p><strong>Valeur:</strong> <span id="detail-valeur"></span> points</p>
-                        <p><strong>IPFS:</strong> <span id="detail-ipfs"></span></p>
-                        <p><strong>Proprietaire:</strong> <span id="detail-owner"></span></p>
-                        <p><strong>Cree le:</strong> <span id="detail-created"></span></p>
-                        <p><strong>Dernier transfert:</strong> <span id="detail-transfer"></span></p>
-                        <p><strong>Anciens proprios:</strong> <span id="detail-previous"></span></p>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer>
-            <p>Trading Cards NFT - Projet Web3</p>
-        </footer>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.min.js"></script>
-    <script src="app.js"></script>
-</body>
 </html>
