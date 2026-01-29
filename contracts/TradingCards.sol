@@ -32,6 +32,13 @@ contract TradingCards is ERC721, Ownable {
         uint256 dernierTransfertA;
     }
 
+    struct PropositionEchange {
+        address proposeur;
+        uint256 tokenPropose;
+        uint256 tokenVoulu;
+        bool active;
+    }
+
     // ============ CONSTANTES ============
 
     uint256 public constant MAX_CARTES_PAR_UTILISATEUR = 4;
@@ -51,6 +58,13 @@ contract TradingCards is ERC721, Ownable {
     // adresse => timestamp de la derniere transaction
     mapping(address => uint256) private _dernierTransaction;
 
+    // id => proposition d'echange
+    mapping(uint256 => PropositionEchange) private _echanges;
+    uint256 private _prochainEchangeId;
+
+    // Flag pour bypass les checks dans _update lors d'un echange
+    bool private _echangeEnCours;
+
     // ============ EVENTS ============
 
     event CarteCree(
@@ -67,6 +81,23 @@ contract TradingCards is ERC721, Ownable {
         address indexed nouveauProprio,
         uint256 timestamp
     );
+
+    event EchangePropose(
+        uint256 indexed echangeId,
+        address indexed proposeur,
+        uint256 tokenPropose,
+        uint256 tokenVoulu
+    );
+
+    event EchangeAccepte(
+        uint256 indexed echangeId,
+        address indexed proposeur,
+        address indexed accepteur,
+        uint256 tokenPropose,
+        uint256 tokenVoulu
+    );
+
+    event EchangeAnnule(uint256 indexed echangeId);
 
     // ============ CONSTRUCTEUR ============
 
@@ -120,6 +151,113 @@ contract TradingCards is ERC721, Ownable {
         emit CarteCree(tokenId, destinataire, nom, rarete, valeur);
 
         return tokenId;
+    }
+
+    // ============ FONCTIONS D'ECHANGE ============
+
+    /**
+     * @dev Proposer un echange de carte avec un autre utilisateur
+     * @param monTokenId ID de la carte que je propose
+     * @param tokenVouluId ID de la carte que je veux en echange
+     */
+    function proposerEchange(
+        uint256 monTokenId,
+        uint256 tokenVouluId
+    ) external returns (uint256) {
+        require(_existeCarte(monTokenId), "Votre carte inexistante");
+        require(_existeCarte(tokenVouluId), "Carte voulue inexistante");
+        require(ownerOf(monTokenId) == msg.sender, "Vous ne possedez pas cette carte");
+        require(ownerOf(tokenVouluId) != msg.sender, "Vous possedez deja la carte voulue");
+
+        // Regle de validation: echange uniquement entre raretes identiques ou adjacentes
+        uint8 rareteA = uint8(_cartes[monTokenId].rarete);
+        uint8 rareteB = uint8(_cartes[tokenVouluId].rarete);
+        uint8 diff = rareteA > rareteB ? rareteA - rareteB : rareteB - rareteA;
+        require(diff <= 1, "Echange interdit: raretes trop eloignees (max 1 niveau d'ecart)");
+
+        uint256 echangeId = _prochainEchangeId;
+        _prochainEchangeId++;
+
+        _echanges[echangeId] = PropositionEchange({
+            proposeur: msg.sender,
+            tokenPropose: monTokenId,
+            tokenVoulu: tokenVouluId,
+            active: true
+        });
+
+        emit EchangePropose(echangeId, msg.sender, monTokenId, tokenVouluId);
+
+        return echangeId;
+    }
+
+    /**
+     * @dev Accepter une proposition d'echange
+     * @param echangeId ID de la proposition d'echange
+     */
+    function accepterEchange(uint256 echangeId) external {
+        PropositionEchange storage echange = _echanges[echangeId];
+        require(echange.active, "Echange inactif ou inexistant");
+
+        address proposeur = echange.proposeur;
+        address accepteur = msg.sender;
+        uint256 tokenPropose = echange.tokenPropose;
+        uint256 tokenVoulu = echange.tokenVoulu;
+
+        require(ownerOf(tokenVoulu) == accepteur, "Vous ne possedez pas la carte demandee");
+        require(ownerOf(tokenPropose) == proposeur, "Le proposeur ne possede plus sa carte");
+
+        // Verifier les cooldowns des deux utilisateurs
+        require(
+            block.timestamp >= _dernierTransaction[proposeur] + COOLDOWN_DUREE,
+            "Cooldown actif pour le proposeur"
+        );
+        require(
+            block.timestamp >= _dernierTransaction[accepteur] + COOLDOWN_DUREE,
+            "Cooldown actif pour l'accepteur"
+        );
+
+        // Verifier les locks des deux cartes
+        require(
+            block.timestamp >= _cartes[tokenPropose].dernierTransfertA + LOCK_DUREE,
+            "Carte proposee encore verrouillee"
+        );
+        require(
+            block.timestamp >= _cartes[tokenVoulu].dernierTransfertA + LOCK_DUREE,
+            "Carte demandee encore verrouillee"
+        );
+
+        // Desactiver la proposition
+        echange.active = false;
+
+        // Activer le flag pour bypass les checks dans _update
+        _echangeEnCours = true;
+
+        // Effectuer les deux transferts
+        _transfer(proposeur, accepteur, tokenPropose);
+        _transfer(accepteur, proposeur, tokenVoulu);
+
+        // Desactiver le flag
+        _echangeEnCours = false;
+
+        // Mettre a jour les cooldowns des deux utilisateurs
+        _dernierTransaction[proposeur] = block.timestamp;
+        _dernierTransaction[accepteur] = block.timestamp;
+
+        emit EchangeAccepte(echangeId, proposeur, accepteur, tokenPropose, tokenVoulu);
+    }
+
+    /**
+     * @dev Annuler une proposition d'echange
+     * @param echangeId ID de la proposition
+     */
+    function annulerEchange(uint256 echangeId) external {
+        PropositionEchange storage echange = _echanges[echangeId];
+        require(echange.active, "Echange deja inactif");
+        require(echange.proposeur == msg.sender, "Seul le proposeur peut annuler");
+
+        echange.active = false;
+
+        emit EchangeAnnule(echangeId);
     }
 
     // ============ FONCTIONS DE LECTURE ============
@@ -241,6 +379,27 @@ contract TradingCards is ERC721, Ownable {
         return block.timestamp < _cartes[tokenId].dernierTransfertA + LOCK_DUREE;
     }
 
+    /**
+     * @dev Recuperer les details d'une proposition d'echange
+     * @param echangeId ID de la proposition
+     */
+    function getEchange(uint256 echangeId) external view returns (
+        address proposeur,
+        uint256 tokenPropose,
+        uint256 tokenVoulu,
+        bool active
+    ) {
+        PropositionEchange storage e = _echanges[echangeId];
+        return (e.proposeur, e.tokenPropose, e.tokenVoulu, e.active);
+    }
+
+    /**
+     * @dev Recuperer le prochain ID d'echange
+     */
+    function getProchainEchangeId() external view returns (uint256) {
+        return _prochainEchangeId;
+    }
+
     // ============ FONCTIONS INTERNES ============
 
     /**
@@ -266,26 +425,28 @@ contract TradingCards is ERC721, Ownable {
 
         // Mise a jour des compteurs et metadonnees si c'est un transfert (pas un mint/burn)
         if (from != address(0) && to != address(0)) {
-            // Verifier le cooldown de l'expediteur (5 min entre deux transactions)
-            require(
-                block.timestamp >= _dernierTransaction[from] + COOLDOWN_DUREE,
-                "Cooldown actif: attendez 5 minutes entre deux transactions"
-            );
+            if (!_echangeEnCours) {
+                // Verifier le cooldown de l'expediteur (5 min entre deux transactions)
+                require(
+                    block.timestamp >= _dernierTransaction[from] + COOLDOWN_DUREE,
+                    "Cooldown actif: attendez 5 minutes entre deux transactions"
+                );
 
-            // Verifier le lock temporaire de la carte (10 min apres acquisition)
-            require(
-                block.timestamp >= _cartes[tokenId].dernierTransfertA + LOCK_DUREE,
-                "Carte verrouillee: attendez 10 minutes apres acquisition"
-            );
+                // Verifier le lock temporaire de la carte (10 min apres acquisition)
+                require(
+                    block.timestamp >= _cartes[tokenId].dernierTransfertA + LOCK_DUREE,
+                    "Carte verrouillee: attendez 10 minutes apres acquisition"
+                );
 
-            // Verifier la limite du destinataire
-            require(
-                _nombreCartes[to] < MAX_CARTES_PAR_UTILISATEUR,
-                "Destinataire a atteint la limite de 4 cartes"
-            );
+                // Verifier la limite du destinataire
+                require(
+                    _nombreCartes[to] < MAX_CARTES_PAR_UTILISATEUR,
+                    "Destinataire a atteint la limite de 4 cartes"
+                );
 
-            // Mettre a jour le cooldown de l'expediteur
-            _dernierTransaction[from] = block.timestamp;
+                // Mettre a jour le cooldown de l'expediteur
+                _dernierTransaction[from] = block.timestamp;
+            }
 
             // Mettre a jour les compteurs
             _nombreCartes[from]--;
