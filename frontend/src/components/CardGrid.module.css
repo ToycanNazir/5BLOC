@@ -1,81 +1,136 @@
-import { useState, useEffect } from "react";
-import { useWeb3 } from "../contexts/Web3Context";
-import { useContract } from "../hooks/useContract";
-import { useMessage } from "../contexts/MessageContext";
-import { RARETES, RARETES_CLASS } from "../constants/contract";
-import styles from "./CardGrid.module.css";
+.section {
+  margin-bottom: 25px;
+}
 
-export default function CardGrid() {
-  const { contract, userAddress } = useWeb3();
-  const { fetchUserCards } = useContract();
-  const { showMessage } = useMessage();
-  const [cards, setCards] = useState([]);
-  const [count, setCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-  const loadCards = async () => {
-    if (!contract || !userAddress) return;
-    setLoading(true);
-    try {
-      const result = await fetchUserCards();
-      setCards(result.cards);
-      setCount(result.count);
-    } catch (err) {
-      showMessage("Erreur lors du chargement des cartes: " + err.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+.header h2 {
+  color: #f39c12;
+  font-size: 1.4rem;
+}
 
-  useEffect(() => {
-    loadCards();
-  }, [contract, userAddress]);
+.refreshBtn {
+  background: #3498db;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
 
-  if (!userAddress) {
-    return (
-      <section className={styles.section}>
-        <h2>Mes Cartes</h2>
-        <p className={styles.empty}>Connectez votre wallet pour voir vos cartes.</p>
-      </section>
-    );
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty {
+  color: #aaa;
+  text-align: center;
+  padding: 30px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #ffffff10;
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid #ffffff15;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.card.commune {
+  border-color: #95a5a6;
+}
+
+.card.rare {
+  border-color: #3498db;
+}
+
+.card.epique {
+  border-color: #9b59b6;
+}
+
+.card.legendaire {
+  border-color: #f39c12;
+  box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tokenId {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge.commune {
+  background: #95a5a620;
+  color: #95a5a6;
+}
+
+.badge.rare {
+  background: #3498db20;
+  color: #3498db;
+}
+
+.badge.epique {
+  background: #9b59b620;
+  color: #9b59b6;
+}
+
+.badge.legendaire {
+  background: #f39c1220;
+  color: #f39c12;
+}
+
+.cardName {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.cardInfo {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.ipfs {
+  font-size: 0.75rem;
+  color: #666;
+  font-family: monospace;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
   }
-
-  return (
-    <section className={styles.section}>
-      <div className={styles.header}>
-        <h2>Mes Cartes ({count}/4)</h2>
-        <button className={styles.refreshBtn} onClick={loadCards} disabled={loading}>
-          {loading ? "Chargement..." : "Rafraichir"}
-        </button>
-      </div>
-
-      {cards.length === 0 && !loading && (
-        <p className={styles.empty}>Vous ne possedez aucune carte.</p>
-      )}
-
-      {loading && <p className={styles.empty}>Chargement...</p>}
-
-      <div className={styles.grid}>
-        {cards.map((card) => (
-          <div key={card.tokenId} className={`${styles.card} ${styles[RARETES_CLASS[card.rarete]]}`}>
-            <div className={styles.cardHeader}>
-              <span className={styles.tokenId}>#{card.tokenId}</span>
-              <span className={`${styles.badge} ${styles[RARETES_CLASS[card.rarete]]}`}>
-                {RARETES[card.rarete]}
-              </span>
-            </div>
-            <h3 className={styles.cardName}>{card.nom}</h3>
-            <div className={styles.cardInfo}>
-              <span>Valeur: {card.valeur}</span>
-            </div>
-            {card.ipfsHash && (
-              <div className={styles.ipfs}>
-                IPFS: {card.ipfsHash.substring(0, 12)}...
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
 }
