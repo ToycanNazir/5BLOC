@@ -1,0 +1,104 @@
+.section h2 {
+  color: #f39c12;
+}
+
+.result {
+  background: #ffffff08;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 15px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h3 {
+  font-size: 1.3rem;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge.commune {
+  background: #95a5a620;
+  color: #95a5a6;
+}
+
+.badge.rare {
+  background: #3498db20;
+  color: #3498db;
+}
+
+.badge.epique {
+  background: #9b59b620;
+  color: #9b59b6;
+}
+
+.badge.legendaire {
+  background: #f39c1220;
+  color: #f39c12;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #ffffff10;
+}
+
+.label {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.address {
+  font-family: monospace;
+  color: #3498db;
+}
+
+.mono {
+  font-family: monospace;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.history {
+  margin-top: 15px;
+}
+
+.history h4 {
+  color: #aaa;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.history ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history li {
+  color: #888;
+  padding: 5px 10px;
+  background: #ffffff08;
+  border-radius: 6px;
+}

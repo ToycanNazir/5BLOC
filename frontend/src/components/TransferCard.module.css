@@ -1,0 +1,14 @@
+.section h2 {
+  color: #f39c12;
+}
+
+.cooldown {
+  background: #e74c3c20;
+  border: 1px solid #e74c3c50;
+  color: #e74c3c;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
